@@ -455,6 +455,7 @@
     const statConversionLift = document.getElementById('statConversionLift');
     const statPValue = document.getElementById('statPValue');
 
+    // Financial Displays
     const revAnnualLift = document.getElementById('revAnnualLift');
     const revMonthlyLift = document.getElementById('revMonthlyLift');
     const revConvDelta = document.getElementById('revConvDelta');
@@ -547,7 +548,18 @@
       calcReqSample.textContent = numRequiredPerVariant.toLocaleString();
       calcDurationDays.textContent = `${requiredDurationDays} Days`;
       calcDurationContext.innerHTML = `Assuming <strong>${config.dailyTraffic.toLocaleString()} daily users</strong> split ${100 - config.splitRatio}% control / ${config.splitRatio}% variation.`;
-      calcSensitivityLabel.innerHTML = `MDE: <strong>${config.mdeRelative}%</strong>`;
+      
+      // Standardize the HTML text inside the calculation card (Removed unrendered LaTeX strings)
+      const testSensCard = document.getElementById('calcSensitivityLabel').parentNode;
+      if (testSensCard) {
+        testSensCard.innerHTML = `
+          <span class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Experimental Sensitivity</span>
+          <span id="calcSensitivityLabel" class="block text-2xl font-extrabold text-indigo-700 mt-1">MDE: ${config.mdeRelative}%</span>
+          <span class="block text-[11px] text-slate-500 mt-2 leading-relaxed">
+            Parameters protect the test against <strong>false positives (Alpha &alpha; = 5%)</strong> and <strong>false negatives (Beta &beta; = 20%)</strong>.
+          </span>
+        `;
+      }
 
       // 2. Post-Test Statistical Significance Calculations
       let pValue = 1.0;
@@ -624,7 +636,7 @@
       updateExecutiveBriefing(statSignificance, relativeLift, pValue, numRequiredPerVariant, requiredDurationDays, annualRevLift, incrementalAnnualConvs);
     }
 
-    // Dynamic Alert and Recommendation Box Generator
+    // Dynamic Alert and Recommendation Box Generator (Replaced unrendered LaTeX and raw Markdown symbols with clean HTML)
     function updateStatusAlert(isSignif, lift, pVal, sampleReq, durationDays) {
       let title = "";
       let desc = "";
@@ -638,17 +650,17 @@
         icon = `<svg class="w-6 h-6 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
       } else if (isSignif && lift > 0) {
         title = "Experiment Successful! (Significant Winner)";
-        desc = `The variation achieved a highly significant **+${lift.toFixed(2)}% relative conversion lift** (p-value: **${pVal.toFixed(4)}**). PM recommends a **100% rollout of the variation** to maximize ARR expansion.`;
+        desc = `The variation achieved a highly significant <strong>+${lift.toFixed(2)}% relative conversion lift</strong> (p-value: <strong>${pVal.toFixed(4)}</strong>). PM recommends a <strong>100% rollout of the variation</strong> to maximize ARR expansion.`;
         colorClasses = "bg-emerald-50 border-emerald-200 text-emerald-800";
         icon = `<svg class="w-6 h-6 text-emerald-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
       } else if (!isSignif && (config.controlTraffic < sampleReq || config.variationTraffic < sampleReq)) {
         title = "Underpowered Experiment (In Progress)";
-        desc = `The current test has only captured **${Math.round((config.controlTraffic / sampleReq) * 100)}%** of the required sample. **Do not terminate or declare a winner yet.** Running underpowered tests increases the risk of false conclusions.`;
+        desc = `The current test has only captured <strong>${Math.round((config.controlTraffic / sampleReq) * 100)}%</strong> of the required sample. <strong>Do not terminate or declare a winner yet.</strong> Running underpowered tests increases the risk of false conclusions.`;
         colorClasses = "bg-amber-50 border-amber-200 text-amber-800";
         icon = `<svg class="w-6 h-6 text-amber-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`;
       } else {
         title = "Inconclusive Result (Flat Test)";
-        desc = `The test is fully powered but failed to demonstrate a statistically significant conversion difference (p-value: **${pVal.toFixed(4)}**). Rollout is **not recommended**; keep baseline experiences and focus product resources on other high-leverage bets.`;
+        desc = `The test is fully powered but failed to demonstrate a statistically significant conversion difference (p-value: <strong>${pVal.toFixed(4)}</strong>). Rollout is <strong>not recommended</strong>; keep baseline experiences and focus product resources on other high-leverage bets.`;
         colorClasses = "bg-slate-100 border-slate-300 text-slate-700";
         icon = `<svg class="w-6 h-6 text-slate-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
       }
