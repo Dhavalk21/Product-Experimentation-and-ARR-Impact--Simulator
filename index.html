@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Experimentation (A/B Testing) & EUR Impact Simulator</title>
+  <!-- Tailwind CSS for high-quality, modern styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Smooth custom transitions and scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- Main Navigation / Top Header -->
+  <header class="bg-white border-b border-slate-200 py-6 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-[1600px] mx-auto flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 w-full">
+      <div>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 mb-2">
+          Growth & Analytics • Product Management Tool
+        </span>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Product Experimentation & ARR Impact Simulator</h1>
+        <p class="text-sm text-slate-500 mt-1">Design rigorous A/B tests, verify statistical significance, and project bottom-line annual recurring revenue metrics.</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button id="btnLoadPreFlightDemo" class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+          Load Pre-Flight Scenario
+        </button>
+        <button id="btnLoadSuccessfulDemo" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
+          Load Completed A/B Test Demo
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace Flex Grid -->
+  <main class="flex-grow max-w-[1600px] w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row gap-8">
+    
+    <!-- Left Panel: Input Controls & Configuration (Adjusted layout: 38.3% Width) -->
+    <div class="w-full lg:w-[38.3%] flex flex-col gap-6 flex-shrink-0">
+      
+      <!-- Section 1: Pre-Flight Experiment Calculator -->
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative">
+        <h2 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+          1. Pre-Flight Configuration
+        </h2>
+        
+        <div class="space-y-4">
+          <!-- Baseline Conversion Rate -->
+          <div>
+            <div class="flex justify-between items-center text-xs mb-1">
+              <span class="flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500">
+                Baseline Conv. Rate (%)
+                <div class="relative inline-block group">
+                  <span class="text-indigo-600 cursor-help font-bold text-[11px] bg-indigo-50 hover:bg-indigo-100 w-4 h-4 rounded-full flex items-center justify-center transition border border-indigo-200">?</span>
+                  <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-64 bg-slate-800 text-white text-xs rounded-lg p-3 shadow-xl z-50 pointer-events-none normal-case font-normal leading-relaxed">
+                    <strong>Baseline Conversion Rate:</strong> The percentage of current visitors who complete your goal (e.g., make a purchase or sign up) <em>before</em> any changes are made.
+                  </div>
+                </div>
+              </span>
+              <span id="labelBaselineCr" class="text-slate-400">Current baseline</span>
+            </div>
+            <input type="number" id="baselineCr" step="0.1" min="0.1" max="100" value="5.0" class="w-full h-10 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+
+          <!-- Minimum Detectable Effect (MDE) -->
+          <div>
+            <div class="flex justify-between items-center text-xs mb-1">
+              <span class="flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500">
+                Target MDE (Relative %)
+                <div class="relative inline-block group">
+                  <span class="text-indigo-600 cursor-help font-bold text-[11px] bg-indigo-50 hover:bg-indigo-100 w-4 h-4 rounded-full flex items-center justify-center transition border border-indigo-200">?</span>
+                  <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-64 bg-slate-800 text-white text-xs rounded-lg p-3 shadow-xl z-50 pointer-events-none normal-case font-normal leading-relaxed">
+                    <strong>Minimum Detectable Effect (MDE):</strong> The smallest percentage improvement you want your test to prove. Smaller targets (like 2%) are harder to detect and require much larger test groups.
+                  </div>
+                </div>
+              </span>
+              <span id="labelMdeRelative" class="text-slate-400">Sensitivity limit</span>
+            </div>
+            <input type="number" id="mdeRelative" step="0.5" min="0.5" max="100" value="10.0" class="w-full h-10 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+
+          <!-- Daily Traffic Allocated -->
+          <div>
+            <div class="flex justify-between items-center text-xs mb-1">
+              <span class="flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500">
+                Total Daily Traffic (Users)
+                <div class="relative inline-block group">
+                  <span class="text-indigo-600 cursor-help font-bold text-[11px] bg-indigo-50 hover:bg-indigo-100 w-4 h-4 rounded-full flex items-center justify-center transition border border-indigo-200">?</span>
+                  <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-64 bg-slate-800 text-white text-xs rounded-lg p-3 shadow-xl z-50 pointer-events-none normal-case font-normal leading-relaxed">
+                    <strong>Daily Traffic:</strong> The total number of unique users that visit this experiment page every day. We use this to calculate how many days the test will need to run.
+                  </div>
+                </div>
+              </span>
+              <span id="labelDailyTraffic" class="text-slate-400">Active traffic</span>
+            </div>
+            <input type="number" id="dailyTraffic" step="100" min="10" value="10000" class="w-full h-10 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+
+          <!-- Traffic Allocation Ratio -->
+          <div>
+            <div class="flex justify-between items-center text-xs mb-1">
+              <span class="flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500">
+                Variation Split Ratio
+                <div class="relative inline-block group">
+                  <span class="text-indigo-600 cursor-help font-bold text-[11px] bg-indigo-50 hover:bg-indigo-100 w-4 h-4 rounded-full flex items-center justify-center transition border border-indigo-200">?</span>
+                  <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-64 bg-slate-800 text-white text-xs rounded-lg p-3 shadow-xl z-50 pointer-events-none normal-case font-normal leading-relaxed">
+                    <strong>Traffic Split Ratio:</strong> How you divide visitors. A 50/50 split sends half of the users to the original (Control) and half to the new version (Variation). This is the fastest way to get results.
+                  </div>
+                </div>
+              </span>
+              <span id="valSplitRatio" class="font-bold text-slate-700">50% / 50%</span>
+            </div>
+            <input type="range" id="splitRatio" min="10" max="90" step="5" value="50" class="w-full h-2 rounded-lg bg-slate-200 accent-indigo-600 cursor-pointer">
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Post-Test Actual Values (Frequentist Testing Input) -->
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative">
+        <h2 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+          2. Post-Test Observations
+        </h2>
+        
+        <div class="space-y-4">
+          <!-- Control Data -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col">
+              <span class="flex items-end gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500 h-8 mb-1">
+                <span>Control Traffic (A)</span>
+                <div class="relative inline-block group">
+                  <span class="text-indigo-600 cursor-help font-bold text-[11px] bg-indigo-50 hover:bg-indigo-100 w-4 h-4 rounded-full flex items-center justify-center transition border border-indigo-200">?</span>
+                  <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-64 bg-slate-800 text-white text-xs rounded-lg p-3 shadow-xl z-50 pointer-events-none normal-case font-normal leading-relaxed">
+                    <strong>Control Traffic:</strong> The total number of unique users who saw the original, unchanged design (Control) while your experiment was active.
+                  </div>
+                </div>
+              </span>
+              <input type="number" id="controlTraffic" value="50000" class="w-full h-10 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            
+            <div class="flex flex-col">
+              <span class="flex items-end gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500 h-8 mb-1">
+                <span>Control Conv.</span>
+                <div class="relative inline-block group">
+                  <span class="text-indigo-600 cursor-help font-bold text-[11px] bg-indigo-50 hover:bg-indigo-100 w-4 h-4 rounded-full flex items-center justify-center transition border border-indigo-200">?</span>
+                  <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-64 bg-slate-800 text-white text-xs rounded-lg p-3 shadow-xl z-50 pointer-events-none normal-case font-normal leading-relaxed">
+                    <strong>Control Conversions:</strong> The number of users in the Control group who successfully completed the desired action during the experiment.
+                  </div>
+                </div>
+              </span>
+              <input type="number" id="controlConversions" value="2500" class="w-full h-10 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+          </div>
+
+          <!-- Variation Data -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col">
+              <span class="flex items-end gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500 h-8 mb-1">
+                <span>Var. Traffic (B)</span>
+                <div class="relative inline-block group">
+                  <span class="text-indigo-600 cursor-help font-bold text-[11px] bg-indigo-50 hover:bg-indigo-100 w-4 h-4 rounded-full flex items-center justify-center transition border border-indigo-200">?</span>
+                  <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-64 bg-slate-800 text-white text-xs rounded-lg p-3 shadow-xl z-50 pointer-events-none normal-case font-normal leading-relaxed">
+                    <strong>Variation Traffic:</strong> The total number of unique users who saw your new, updated product variation while the experiment was active.
+                  </div>
+                </div>
+              </span>
+              <input type="number" id="variationTraffic" value="50200" class="w-full h-10 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <div class="flex flex-col">
+              <span class="flex items-end gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500 h-8 mb-1">
+                <span>Var. Conversions</span>
+                <div class="relative inline-block group">
+                  <span class="text-indigo-600 cursor-help font-bold text-[11px] bg-indigo-50 hover:bg-indigo-100 w-4 h-4 rounded-full flex items-center justify-center transition border border-indigo-200">?</span>
+                  <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-64 bg-slate-800 text-white text-xs rounded-lg p-3 shadow-xl z-50 pointer-events-none normal-case font-normal leading-relaxed">
+                    <strong>Variation Conversions:</strong> The number of users in the new Variation group who completed the target action during the experiment.
+                  </div>
+                </div>
+              </span>
+              <input type="number" id="variationConversions" value="2861" class="w-full h-10 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Financial ROI Projections -->
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative">
+        <h2 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          3. Business Unit Economics
+        </h2>
+        
+        <div class="space-y-4">
+          <!-- Average Contract / Order Value (ACV / AOV) -->
+          <div>
+            <div class="flex justify-between items-center text-xs mb-1">
+              <span class="flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500">
+                Avg. Contract Value (€)
+                <div class="relative inline-block group">
+                  <span class="text-indigo-600 cursor-help font-bold text-[11px] bg-indigo-50 hover:bg-indigo-100 w-4 h-4 rounded-full flex items-center justify-center transition border border-indigo-200">?</span>
+                  <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-64 bg-slate-800 text-white text-xs rounded-lg p-3 shadow-xl z-50 pointer-events-none normal-case font-normal leading-relaxed">
+                    <strong>Average Contract / Order Value (ACV/AOV):</strong> The average Euro amount a customer spends during a single transaction or when signing up for a subscription contract.
+                  </div>
+                </div>
+              </span>
+              <span id="valOrderValue" class="font-bold text-indigo-600">€120</span>
+            </div>
+            <input type="range" id="orderValue" min="5" max="2500" step="5" value="120" class="w-full h-2 rounded-lg bg-slate-200 accent-indigo-600 cursor-pointer">
+          </div>
+
+          <!-- Purchase Frequency -->
+          <div>
+            <div class="flex justify-between items-center text-xs mb-1">
+              <span class="flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500">
+                Purchases per Year
+                <div class="relative inline-block group">
+                  <span class="text-indigo-600 cursor-help font-bold text-[11px] bg-indigo-50 hover:bg-indigo-100 w-4 h-4 rounded-full flex items-center justify-center transition border border-indigo-200">?</span>
+                  <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-64 bg-slate-800 text-white text-xs rounded-lg p-3 shadow-xl z-50 pointer-events-none normal-case font-normal leading-relaxed">
+                    <strong>Purchase Frequency:</strong> How many times an average customer purchases from your product or renews their subscription within an entire year.
+                  </div>
+                </div>
+              </span>
+              <span id="valPurchaseFreq" class="font-bold text-indigo-600">1</span>
+            </div>
+            <input type="range" id="purchaseFreq" min="1" max="12" step="1" value="1" class="w-full h-2 rounded-lg bg-slate-200 accent-indigo-600 cursor-pointer">
+          </div>
+
+          <!-- Total Target Population per Annum -->
+          <div>
+            <div class="flex justify-between items-center text-xs mb-1">
+              <span class="flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500">
+                Annual Addressable Traffic
+                <div class="relative inline-block group">
+                  <span class="text-indigo-600 cursor-help font-bold text-[11px] bg-indigo-50 hover:bg-indigo-100 w-4 h-4 rounded-full flex items-center justify-center transition border border-indigo-200">?</span>
+                  <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-64 bg-slate-800 text-white text-xs rounded-lg p-3 shadow-xl z-50 pointer-events-none normal-case font-normal leading-relaxed">
+                    <strong>Annual Addressable Traffic:</strong> The total size of your user base or page audience over a full year. We use this to scale up our conversion lift and project total annual growth.
+                  </div>
+                </div>
+              </span>
+              <span id="labelAnnualTraffic" class="text-slate-400">Total population sizing</span>
+            </div>
+            <input type="number" id="annualTraffic" step="10000" min="1000" value="3650000" class="w-full h-10 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+      </div>
+      
+    </div>
+
+    <!-- Right Workspace: Analysis, Calculations & Modeling Results (Dynamic flex sizing: 61.7% Width) -->
+    <div class="w-full lg:w-[61.7%] flex flex-col gap-6 flex-grow">
+      
+      <!-- Key Interactive Status Alerts -->
+      <div id="alertExperimentStatus" class="p-5 rounded-xl border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-all duration-300">
+        <!-- Renders programmatically based on calculation state -->
+      </div>
+
+      <!-- Pre-Flight Runtime Requirements -->
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">A/B Test Design Parameters (Pre-Flight Calculation)</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+            <span class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Required Users / Variant</span>
+            <span id="calcReqSample" class="block text-2xl font-extrabold text-slate-900 mt-1">--</span>
+            <span class="block text-[11px] text-slate-500 mt-2 leading-relaxed">
+              Total unique users required in each split branch to confidently recognize the requested MDE.
+            </span>
+          </div>
+
+          <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+            <span class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Target Campaign Duration</span>
+            <span id="calcDurationDays" class="block text-2xl font-extrabold text-slate-900 mt-1">--</span>
+            <span id="calcDurationContext" class="block text-[11px] text-slate-500 mt-2 leading-relaxed">
+              Estimated days to capture the cohort size using your current active traffic parameters.
+            </span>
+          </div>
+
+          <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+            <span class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Experimental Sensitivity</span>
+            <span id="calcSensitivityLabel" class="block text-2xl font-extrabold text-indigo-700 mt-1">--</span>
+            <span class="block text-[11px] text-slate-500 mt-2 leading-relaxed">
+              Your parameters protect the test against **false positives ($\alpha = 5\%$)** and **false negatives ($\beta = 20\%$)**.
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Post-Test Statistical Significance Panel -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Significance Validation & Analysis</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Calculated using a standard two-tailed pooled Z-test for proportions.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
+              Confidence Level: 95%
+            </span>
+          </div>
+        </div>
+
+        <div class="p-6 grid grid-cols-1 md:grid-cols-4 gap-6 text-center divide-y md:divide-y-0 md:divide-x divide-slate-100">
+          <div>
+            <span class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Control CR (A)</span>
+            <span id="statControlCr" class="block text-xl font-bold text-slate-900">--</span>
+          </div>
+          <div class="pt-4 md:pt-0">
+            <span class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Variation CR (B)</span>
+            <span id="statVariationCr" class="block text-xl font-bold text-slate-900">--</span>
+          </div>
+          <div class="pt-4 md:pt-0">
+            <span class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Measured Conversion Lift</span>
+            <span id="statConversionLift" class="block text-xl font-bold text-slate-900">--</span>
+          </div>
+          <div class="pt-4 md:pt-0">
+            <span class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Stat. Significance (p-value)</span>
+            <span id="statPValue" class="block text-xl font-bold text-slate-900">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Strategic Revenue Projection Module -->
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Business Revenue Impact Projection</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Projects conversion differences across your annual target population into recurring revenue streams.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <!-- Large Scale EUR Impact Hero Card -->
+          <div class="bg-slate-900 text-white p-6 rounded-xl flex flex-col justify-between shadow-md relative overflow-hidden">
+            <!-- Background accent glow -->
+            <div class="absolute right-0 bottom-0 w-32 h-32 bg-indigo-500 opacity-20 blur-3xl pointer-events-none"></div>
+            
+            <div>
+              <span class="text-xs font-bold uppercase tracking-widest text-indigo-300">Projected Annual Recurring Revenue Delta (ARR)</span>
+              <span id="revAnnualLift" class="block text-4xl font-extrabold text-white mt-2 tracking-tight">€0</span>
+            </div>
+            
+            <div class="mt-6 pt-4 border-t border-slate-800 flex justify-between text-xs text-slate-400">
+              <span>Estimated Monthly Lift:</span>
+              <span id="revMonthlyLift" class="font-bold text-emerald-400">€0 / Mo</span>
+            </div>
+          </div>
+
+          <!-- Supporting Financial Metrics -->
+          <div class="space-y-4">
+            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 flex justify-between items-center">
+              <div>
+                <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Conversion Delta</span>
+                <span id="revConvDelta" class="block text-sm font-bold text-slate-900 mt-0.5">0.00%</span>
+              </div>
+              <div class="text-right">
+                <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Incremental Conversions</span>
+                <span id="revIncrConversions" class="block text-sm font-bold text-slate-900 mt-0.5">0</span>
+              </div>
+            </div>
+
+            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Executive ROI Statement</span>
+              <p id="revExecutiveSummaryText" class="text-xs text-slate-600 mt-1.5 leading-relaxed">
+                Add experimental results and economic values on the left to calculate bottom-line strategic impact.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Live-Generated Executive Briefing Memo -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col w-full">
+        <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Executive Briefing Generator</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Instantly outputs a curated, beautifully written executive summary memo to share with stakeholders.</p>
+          </div>
+          
+          <button id="btnCopyMemo" class="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3.5 py-2 rounded-lg transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+            Copy Memo (Markdown)
+          </button>
+        </div>
+
+        <div class="p-6 bg-slate-50">
+          <div id="memoContent" class="bg-white p-6 rounded-lg border border-slate-200 shadow-inner font-mono text-xs text-slate-700 whitespace-pre-wrap leading-relaxed max-h-[300px] overflow-y-auto font-medium">
+            <!-- Memo renders dynamically -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    // State management variables
+    let config = {
+      baselineCr: 5.0,
+      mdeRelative: 10.0,
+      dailyTraffic: 10000,
+      splitRatio: 50,
+      controlTraffic: 50000,
+      controlConversions: 2500,
+      variationTraffic: 50200,
+      variationConversions: 2861,
+      orderValue: 120,
+      purchaseFreq: 1,
+      annualTraffic: 3650000
+    };
+
+    // DOM Elements
+    const inputBaselineCr = document.getElementById('baselineCr');
+    const inputMdeRelative = document.getElementById('mdeRelative');
+    const inputDailyTraffic = document.getElementById('dailyTraffic');
+    const inputSplitRatio = document.getElementById('splitRatio');
+    const valSplitRatio = document.getElementById('valSplitRatio');
+
+    const inputControlTraffic = document.getElementById('controlTraffic');
+    const inputControlConversions = document.getElementById('controlConversions');
+    const inputVariationTraffic = document.getElementById('variationTraffic');
+    const inputVariationConversions = document.getElementById('variationConversions');
+
+    const inputOrderValue = document.getElementById('orderValue');
+    const valOrderValue = document.getElementById('valOrderValue');
+    const inputPurchaseFreq = document.getElementById('purchaseFreq');
+    const valPurchaseFreq = document.getElementById('valPurchaseFreq');
+    const inputAnnualTraffic = document.getElementById('annualTraffic');
+
+    // Stats Displays
+    const calcReqSample = document.getElementById('calcReqSample');
+    const calcDurationDays = document.getElementById('calcDurationDays');
+    const calcDurationContext = document.getElementById('calcDurationContext');
+    const calcSensitivityLabel = document.getElementById('calcSensitivityLabel');
+
+    const statControlCr = document.getElementById('statControlCr');
+    const statVariationCr = document.getElementById('statVariationCr');
+    const statConversionLift = document.getElementById('statConversionLift');
+    const statPValue = document.getElementById('statPValue');
+
+    const revAnnualLift = document.getElementById('revAnnualLift');
+    const revMonthlyLift = document.getElementById('revMonthlyLift');
+    const revConvDelta = document.getElementById('revConvDelta');
+    const revIncrConversions = document.getElementById('revIncrConversions');
+    const revExecutiveSummaryText = document.getElementById('revExecutiveSummaryText');
+
+    const alertExperimentStatus = document.getElementById('alertExperimentStatus');
+    const memoContent = document.getElementById('memoContent');
+
+    // Button triggers
+    const btnLoadPreFlightDemo = document.getElementById('btnLoadPreFlightDemo');
+    const btnLoadSuccessfulDemo = document.getElementById('btnLoadSuccessfulDemo');
+    const btnCopyMemo = document.getElementById('btnCopyMemo');
+
+    // Demo Data
+    const preFlightDemo = {
+      baselineCr: 4.2,
+      mdeRelative: 8.0,
+      dailyTraffic: 15000,
+      splitRatio: 50,
+      controlTraffic: 0,
+      controlConversions: 0,
+      variationTraffic: 0,
+      variationConversions: 0,
+      orderValue: 150,
+      purchaseFreq: 1,
+      annualTraffic: 5400000
+    };
+
+    const completedDemo = {
+      baselineCr: 4.5,
+      mdeRelative: 8.0,
+      dailyTraffic: 15000,
+      splitRatio: 50,
+      controlTraffic: 80000,
+      controlConversions: 3600,
+      variationTraffic: 80120,
+      variationConversions: 3965,
+      orderValue: 150,
+      purchaseFreq: 1,
+      annualTraffic: 5400000
+    };
+
+    // Standard Normal CDF (error function approximation) for exact Frequentist p-value
+    function normalCDF(z) {
+      const b1 =  0.319381530;
+      const b2 = -0.356563782;
+      const b3 =  1.781477937;
+      const b4 = -1.821255978;
+      const b5 =  1.330274429;
+      const p  =  0.2316419;
+      const c  =  0.39894228;
+
+      if (z >= 0.0) {
+        const t = 1.0 / (1.0 + p * z);
+        return (1.0 - c * Math.exp(-z * z / 2.0) * t *
+               (t *(t *(t *(t * b5 + b4) + b3) + b2) + b1));
+      } else {
+        const t = 1.0 / (1.0 - p * z);
+        return (c * Math.exp(-z * z / 2.0) * t *
+               (t *(t *(t *(t * b5 + b4) + b3) + b2) + b1));
+      }
+    }
+
+    // Mathematical Engine
+    function calculate() {
+      // 1. Pre-Flight Calculations
+      const p = config.baselineCr / 100.0;
+      const mde = (config.mdeRelative / 100.0) * p; // Absolute MDE value
+      
+      // Standard critical values for two-sided 95% significance (Z=1.96) and 80% power (Z=0.84)
+      const zAlpha2 = 1.96;
+      const zBeta = 0.8416;
+      
+      // Formula: n = 2 * (Z_alpha/2 + Z_beta)^2 * p * (1-p) / MDE^2
+      const numRequiredPerVariant = Math.ceil((2 * Math.pow(zAlpha2 + zBeta, 2) * p * (1 - p)) / Math.pow(mde, 2));
+      
+      // Calculate days to run based on split allocation ratio
+      const controlPercent = (100 - config.splitRatio) / 100.0;
+      const variationPercent = config.splitRatio / 100.0;
+
+      const dailyControlTraffic = config.dailyTraffic * controlPercent;
+      const dailyVariationTraffic = config.dailyTraffic * variationPercent;
+
+      const daysControl = numRequiredPerVariant / dailyControlTraffic;
+      const daysVariation = numRequiredPerVariant / dailyVariationTraffic;
+      const requiredDurationDays = Math.ceil(Math.max(daysControl, daysVariation));
+
+      // Display Pre-Flight Calculations
+      calcReqSample.textContent = numRequiredPerVariant.toLocaleString();
+      calcDurationDays.textContent = `${requiredDurationDays} Days`;
+      calcDurationContext.innerHTML = `Assuming <strong>${config.dailyTraffic.toLocaleString()} daily users</strong> split ${100 - config.splitRatio}% control / ${config.splitRatio}% variation.`;
+      calcSensitivityLabel.innerHTML = `MDE: <strong>${config.mdeRelative}%</strong>`;
+
+      // 2. Post-Test Statistical Significance Calculations
+      let pValue = 1.0;
+      let relativeLift = 0.0;
+      let statSignificance = false;
+      let controlCrValue = 0.0;
+      let variationCrValue = 0.0;
+
+      if (config.controlTraffic > 0 && config.variationTraffic > 0) {
+        controlCrValue = config.controlConversions / config.controlTraffic;
+        variationCrValue = config.variationConversions / config.variationTraffic;
+        
+        statControlCr.textContent = `${(controlCrValue * 100).toFixed(3)}%`;
+        statVariationCr.textContent = `${(variationCrValue * 100).toFixed(3)}%`;
+
+        relativeLift = ((variationCrValue - controlCrValue) / controlCrValue) * 100;
+        statConversionLift.innerHTML = `<span class="${relativeLift >= 0 ? 'text-emerald-600' : 'text-red-600'}">${relativeLift >= 0 ? '+' : ''}${relativeLift.toFixed(2)}%</span>`;
+
+        // Z-Test for Two Proportions
+        const pooledP = (config.controlConversions + config.variationConversions) / (config.controlTraffic + config.variationTraffic);
+        const standardError = Math.sqrt(pooledP * (1.0 - pooledP) * ((1.0 / config.controlTraffic) + (1.0 / config.variationTraffic)));
+        
+        if (standardError > 0) {
+          const zScore = (variationCrValue - controlCrValue) / standardError;
+          // Two-tailed p-value
+          pValue = 2.0 * (1.0 - normalCDF(Math.abs(zScore)));
+          statSignificance = pValue <= 0.05;
+        }
+
+        statPValue.innerHTML = `<span class="${statSignificance ? 'text-emerald-600 font-bold' : 'text-slate-500'}">${pValue < 0.0001 ? '<0.0001' : pValue.toFixed(4)}</span>`;
+      } else {
+        statControlCr.textContent = "--";
+        statVariationCr.textContent = "--";
+        statConversionLift.textContent = "--";
+        statPValue.textContent = "--";
+      }
+
+      // 3. Bottom-Line Financial & ARR Projection Calculations
+      let annualRevLift = 0.0;
+      let monthlyRevLift = 0.0;
+      let conversionDeltaValue = 0.0;
+      let incrementalAnnualConvs = 0.0;
+
+      if (config.controlTraffic > 0 && config.variationTraffic > 0) {
+        conversionDeltaValue = variationCrValue - controlCrValue;
+        
+        // Only run business projections if conversion delta is positive
+        if (conversionDeltaValue > 0) {
+          incrementalAnnualConvs = Math.round(config.annualTraffic * conversionDeltaValue);
+          annualRevLift = incrementalAnnualConvs * config.orderValue * config.purchaseFreq;
+          monthlyRevLift = annualRevLift / 12.0;
+        }
+
+        revConvDelta.textContent = `${conversionDeltaValue >= 0 ? '+' : ''}${(conversionDeltaValue * 100).toFixed(3)}%`;
+        revIncrConversions.textContent = incrementalAnnualConvs.toLocaleString();
+        revAnnualLift.textContent = `€${Math.round(annualRevLift).toLocaleString()}`;
+        revMonthlyLift.textContent = `+€${Math.round(monthlyRevLift).toLocaleString()} / Mo`;
+
+        if (conversionDeltaValue > 0) {
+          revExecutiveSummaryText.innerHTML = `Improving user conversion by <strong>${(conversionDeltaValue * 100).toFixed(3)}%</strong> across your annual target population of <strong>${config.annualTraffic.toLocaleString()}</strong> drives an additional <strong>${incrementalAnnualConvs.toLocaleString()} acquisitions</strong> per year, yielding <strong>€${Math.round(annualRevLift).toLocaleString()} ARR</strong> in high-margin growth.`;
+        } else {
+          revExecutiveSummaryText.textContent = `Variation conversion is currently flat or negative compared to control. No incremental positive revenue generated.`;
+        }
+      } else {
+        revConvDelta.textContent = "0.00%";
+        revIncrConversions.textContent = "0";
+        revAnnualLift.textContent = "€0";
+        revMonthlyLift.textContent = "+€0 / Mo";
+        revExecutiveSummaryText.textContent = "Awaiting post-test observation metrics to calculate conversion lift and business unit revenue economics.";
+      }
+
+      // 4. Update Header and Alert Status Widgets
+      updateStatusAlert(statSignificance, relativeLift, pValue, numRequiredPerVariant, requiredDurationDays);
+      updateExecutiveBriefing(statSignificance, relativeLift, pValue, numRequiredPerVariant, requiredDurationDays, annualRevLift, incrementalAnnualConvs);
+    }
+
+    // Dynamic Alert and Recommendation Box Generator
+    function updateStatusAlert(isSignif, lift, pVal, sampleReq, durationDays) {
+      let title = "";
+      let desc = "";
+      let colorClasses = "";
+      let icon = "";
+
+      if (config.controlTraffic === 0 || config.variationTraffic === 0) {
+        title = "Test Pre-Flight Design Stage";
+        desc = `To discover a relative conversion lift of <strong>${config.mdeRelative}%</strong> with statistical confidence, ensure you allocate a minimum sample cohort of <strong>${sampleReq.toLocaleString()} users per variant</strong>. Keep the A/B test running for <strong>${durationDays} days</strong>.`;
+        colorClasses = "bg-blue-50 border-blue-200 text-blue-800";
+        icon = `<svg class="w-6 h-6 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+      } else if (isSignif && lift > 0) {
+        title = "Experiment Successful! (Significant Winner)";
+        desc = `The variation achieved a highly significant **+${lift.toFixed(2)}% relative conversion lift** (p-value: **${pVal.toFixed(4)}**). PM recommends a **100% rollout of the variation** to maximize ARR expansion.`;
+        colorClasses = "bg-emerald-50 border-emerald-200 text-emerald-800";
+        icon = `<svg class="w-6 h-6 text-emerald-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+      } else if (!isSignif && (config.controlTraffic < sampleReq || config.variationTraffic < sampleReq)) {
+        title = "Underpowered Experiment (In Progress)";
+        desc = `The current test has only captured **${Math.round((config.controlTraffic / sampleReq) * 100)}%** of the required sample. **Do not terminate or declare a winner yet.** Running underpowered tests increases the risk of false conclusions.`;
+        colorClasses = "bg-amber-50 border-amber-200 text-amber-800";
+        icon = `<svg class="w-6 h-6 text-amber-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`;
+      } else {
+        title = "Inconclusive Result (Flat Test)";
+        desc = `The test is fully powered but failed to demonstrate a statistically significant conversion difference (p-value: **${pVal.toFixed(4)}**). Rollout is **not recommended**; keep baseline experiences and focus product resources on other high-leverage bets.`;
+        colorClasses = "bg-slate-100 border-slate-300 text-slate-700";
+        icon = `<svg class="w-6 h-6 text-slate-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+      }
+
+      alertExperimentStatus.className = `p-5 rounded-xl border flex flex-col sm:flex-row sm:items-start gap-4 transition-all duration-300 ${colorClasses}`;
+      alertExperimentStatus.innerHTML = `
+        <div class="flex items-start gap-3">
+          ${icon}
+          <div>
+            <span class="block font-bold text-sm sm:text-base">${title}</span>
+            <p class="text-xs sm:text-sm mt-1 leading-relaxed opacity-90">${desc}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // Dynamic Briefing Generator Output
+    function updateExecutiveBriefing(isSignif, lift, pVal, sampleReq, durationDays, annualLift, incrConvs) {
+      let memo = `### 💼 PRODUCT EXPERIMENTATION & EUR BRIEF\n`;
+      memo += `Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n`;
+      memo += `Author: Product Leadership\n`;
+      memo += `=========================================================================\n\n`;
+      
+      memo += `1. OBJECTIVE & EXPERIMENTAL PARAMS\n`;
+      memo += `-------------------------------------------------------------------------\n`;
+      memo += `* Baseline Conversion Rate   : ${config.baselineCr.toFixed(2)}%\n`;
+      memo += `* Target Minimum Detectable  : ${config.mdeRelative.toFixed(2)}% (Relative)\n`;
+      memo += `* Required Variant Sample    : ${sampleReq.toLocaleString()} unique users / branch\n`;
+      memo += `* Target Runtime Allocation  : ${durationDays} Days (Based on ${config.dailyTraffic.toLocaleString()} DAU)\n\n`;
+
+      memo += `2. POST-TEST OBSERVATIONS\n`;
+      memo += `-------------------------------------------------------------------------\n`;
+      if (config.controlTraffic === 0 || config.variationTraffic === 0) {
+        memo += `[Awaiting observations. Test currently in planning phase.]\n\n`;
+      } else {
+        memo += `* Control Branch (A)         : ${config.controlTraffic.toLocaleString()} users | ${config.controlConversions.toLocaleString()} conversions (${(config.controlConversions/config.controlTraffic*100).toFixed(3)}% CR)\n`;
+        memo += `* Variation Branch (B)       : ${config.variationTraffic.toLocaleString()} users | ${config.variationConversions.toLocaleString()} conversions (${(config.variationConversions/config.variationTraffic*100).toFixed(3)}% CR)\n`;
+        memo += `* Measured Conversion Lift   : ${lift >= 0 ? '+' : ''}${lift.toFixed(2)}% Relative\n`;
+        memo += `* Two-Tailed Significance P  : ${pVal.toFixed(6)} (Confidence Level: ${isSignif ? '95% Significant' : 'Not Significant'})\n\n`;
+      }
+
+      memo += `3. RETROSPECTIVE BUSINESS IMPACT & EUR METRICS\n`;
+      memo += `-------------------------------------------------------------------------\n`;
+      memo += `* Target Annual Addressable  : ${config.annualTraffic.toLocaleString()} active users\n`;
+      memo += `* Unit Economic Values (ACV) : €${config.orderValue} at ${config.purchaseFreq} purchase(s)/year\n`;
+      if (config.controlTraffic > 0 && config.variationTraffic > 0 && lift > 0 && isSignif) {
+        memo += `* Incremental Annual Acq.    : +${incrConvs.toLocaleString()} conversions / year\n`;
+        memo += `* Projected Annual Revenue   : +€${Math.round(annualLift).toLocaleString()} ARR Expansion\n\n`;
+        memo += `DECISION BRIEF:\n`;
+        memo += `- Recommend full 100% rollout of Variation immediately.\n`;
+        memo += `- This validates our core hypothesis and scales our growth vector safely with high statistical confidence.\n`;
+      } else if (config.controlTraffic > 0 && config.variationTraffic > 0 && !isSignif) {
+        memo += `* Incremental Annual Acq.    : €0 conversions / year (Inconclusive result)\n`;
+        memo += `* Projected Annual Revenue   : €0 ARR (No revenue expansion)\n\n`;
+        memo += `DECISION BRIEF:\n`;
+        memo += `- Reject Variation. Rollout NOT recommended due to lack of statistical significance.\n`;
+        memo += `- Maintain control baseline to minimize regression risks. Reallocate resources to high-value pipeline priorities.\n`;
+      } else {
+        memo += `[Pending test data completion to run projections. Please load successful test scenario to view example layout.]\n`;
+      }
+
+      memoContent.textContent = memo;
+    }
+
+    // Input listeners update wrapper
+    function updateState() {
+      config.baselineCr = parseFloat(inputBaselineCr.value) || 0.1;
+      config.mdeRelative = parseFloat(inputMdeRelative.value) || 0.5;
+      config.dailyTraffic = parseInt(inputDailyTraffic.value) || 10;
+      config.splitRatio = parseInt(inputSplitRatio.value);
+      
+      valSplitRatio.textContent = `${100 - config.splitRatio}% / ${config.splitRatio}%`;
+
+      config.controlTraffic = parseInt(inputControlTraffic.value) || 0;
+      config.controlConversions = parseInt(inputControlConversions.value) || 0;
+      config.variationTraffic = parseInt(inputVariationTraffic.value) || 0;
+      config.variationConversions = parseInt(inputVariationConversions.value) || 0;
+
+      config.orderValue = parseInt(inputOrderValue.value);
+      valOrderValue.textContent = `€${config.orderValue}`;
+      config.purchaseFreq = parseInt(inputPurchaseFreq.value);
+      valPurchaseFreq.textContent = `${config.purchaseFreq} Purchase${config.purchaseFreq > 1 ? 's' : ''}/Yr`;
+      config.annualTraffic = parseInt(inputAnnualTraffic.value) || 1000;
+
+      calculate();
+    }
+
+    // Connect standard listeners
+    [inputBaselineCr, inputMdeRelative, inputDailyTraffic, inputSplitRatio,
+     inputControlTraffic, inputControlConversions, inputVariationTraffic, inputVariationConversions,
+     inputOrderValue, inputPurchaseFreq, inputAnnualTraffic].forEach(input => {
+      input.addEventListener('input', updateState);
+    });
+
+    // Preset loaders
+    btnLoadPreFlightDemo.addEventListener('click', () => {
+      config = { ...preFlightDemo };
+      applyConfigToInputs();
+      calculate();
+    });
+
+    btnLoadSuccessfulDemo.addEventListener('click', () => {
+      config = { ...completedDemo };
+      applyConfigToInputs();
+      calculate();
+    });
+
+    function applyConfigToInputs() {
+      inputBaselineCr.value = config.baselineCr;
+      inputMdeRelative.value = config.mdeRelative;
+      inputDailyTraffic.value = config.dailyTraffic;
+      inputSplitRatio.value = config.splitRatio;
+      valSplitRatio.textContent = `${100 - config.splitRatio}% / ${config.splitRatio}%`;
+
+      inputControlTraffic.value = config.controlTraffic;
+      inputControlConversions.value = config.controlConversions;
+      inputVariationTraffic.value = config.variationTraffic;
+      inputVariationConversions.value = config.variationConversions;
+
+      inputOrderValue.value = config.orderValue;
+      valOrderValue.textContent = `€${config.orderValue}`;
+      inputPurchaseFreq.value = config.purchaseFreq;
+      valPurchaseFreq.textContent = `${config.purchaseFreq} Purchase${config.purchaseFreq > 1 ? 's' : ''}/Yr`;
+      inputAnnualTraffic.value = config.annualTraffic;
+    }
+
+    // Clipboard copy mechanism for inline canvas
+    btnCopyMemo.addEventListener('click', () => {
+      const textToCopy = memoContent.textContent;
+      
+      const tempTextArea = document.createElement("textarea");
+      tempTextArea.value = textToCopy;
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempTextArea);
+
+      const oldButtonLabel = btnCopyMemo.innerHTML;
+      btnCopyMemo.innerHTML = `
+        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        Brief Copied!
+      `;
+      setTimeout(() => {
+        btnCopyMemo.innerHTML = oldButtonLabel;
+      }, 2000);
+    });
+
+    // Window initialize setup
+    window.onload = function() {
+      config = { ...preFlightDemo };
+      applyConfigToInputs();
+      calculate();
+    };
+  </script>
+
+</body>
+</html>
