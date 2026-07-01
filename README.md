@@ -12,7 +12,6 @@ An interactive, analytics tool designed to bridge the gap between statistical si
 * **Financial Modeling:** Translates conversion rate lifts directly into annual recurring revenue (ARR) and incremental acquisitions based on average order or contract values.
 * **Executive Communication:** Instantly generates a clean, plain-English executive summary memo of the experiment's findings that is ready to be shared with stakeholders.
 
-
 ## ⚙️ How the Math Works
 
 1. **Pre-Flight Sample Size ($n$):** Calculated using standard statistical power analysis for two-sample proportions:
