@@ -14,7 +14,7 @@ An interactive, analytics tool designed to bridge the gap between statistical si
 
 ## ⚙️ How the Math Works
 
-1. **Pre-Flight Sample Size ($n$):** Calculated using standard statistical power analysis for two-sample proportions:
+1. **Pre-Flight Sample Size ($n$):** Calculated using standard statistical power analysis for two-sample proportions
    $$n \approx \frac{2 \cdot (Z_{\alpha/2} + Z_{\beta})^2 \cdot p \cdot (1-p)}{MDE^2}$$
    Where $Z_{\alpha/2} = 1.96$ (95% confidence level), $Z_{\beta} = 0.8416$ (80% statistical power), $p$ is your baseline conversion rate, and $MDE$ is the absolute target Minimum Detectable Effect.
 
